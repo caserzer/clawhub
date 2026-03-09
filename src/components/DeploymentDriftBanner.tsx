@@ -1,14 +1,48 @@
 import { useQuery } from 'convex/react'
-import { useEffect } from 'react'
+import { Component, useEffect, type ReactNode } from 'react'
 import { api } from '../../convex/_generated/api'
 import { getDeploymentDriftInfo } from '../lib/deploymentDrift'
 
-const FRONTEND_BUILD_SHA = import.meta.env.VITE_APP_BUILD_SHA?.trim() || null
+function getFrontendBuildSha() {
+  return import.meta.env.VITE_APP_BUILD_SHA?.trim() || null
+}
 
-export function DeploymentDriftBanner() {
+type DeploymentDriftBannerBoundaryProps = {
+  children: ReactNode
+}
+
+type DeploymentDriftBannerBoundaryState = {
+  hasError: boolean
+}
+
+class DeploymentDriftBannerBoundary extends Component<
+  DeploymentDriftBannerBoundaryProps,
+  DeploymentDriftBannerBoundaryState
+> {
+  state: DeploymentDriftBannerBoundaryState = {
+    hasError: false,
+  }
+
+  static getDerivedStateFromError() {
+    return {
+      hasError: true,
+    }
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error('Deployment drift banner crashed', error)
+  }
+
+  render() {
+    if (this.state.hasError) return null
+    return this.props.children
+  }
+}
+
+function DeploymentDriftBannerContent() {
   const deploymentInfo = useQuery(api.appMeta.getDeploymentInfo)
   const drift = getDeploymentDriftInfo({
-    expectedBuildSha: FRONTEND_BUILD_SHA,
+    expectedBuildSha: getFrontendBuildSha(),
     actualBuildSha: deploymentInfo?.appBuildSha ?? null,
   })
 
@@ -43,5 +77,13 @@ export function DeploymentDriftBanner() {
       <code>{drift.actualBuildSha}</code>
       .
     </div>
+  )
+}
+
+export function DeploymentDriftBanner() {
+  return (
+    <DeploymentDriftBannerBoundary>
+      <DeploymentDriftBannerContent />
+    </DeploymentDriftBannerBoundary>
   )
 }
