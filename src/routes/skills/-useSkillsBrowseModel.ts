@@ -84,7 +84,8 @@ export function useSkillsBrowseModel({
       } catch (err) {
         if (generation !== fetchGeneration.current) return
         console.error('Failed to fetch skills page:', err)
-        setListStatus('done')
+        // Reset to idle so the user can retry via "Load more"
+        setListStatus(cursor ? 'idle' : 'done')
       }
     },
     [listSort, dir, highlightedOnly, nonSuspiciousOnly],
