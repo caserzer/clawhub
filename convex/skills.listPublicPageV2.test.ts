@@ -366,7 +366,7 @@ describe('skills.listPublicPageV2', () => {
     expect(result.page).toHaveLength(1)
     expect(result.page[0]?.skill.slug).toBe('old')
     // No db.get fallback — latestVersion is null when summary is absent
-    expect(result.page[0]?.latestVersion).toBeNull()
+    expect((result.page[0] as Record<string, unknown>)?.latestVersion).toBeNull()
     expect(ctx.db.get).not.toHaveBeenCalled()
   })
 
